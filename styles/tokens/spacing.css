@@ -1,0 +1,21 @@
+:root {
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 10px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 22px;
+  --space-7: 26px;
+  --space-8: 34px;
+  --space-9: 44px;
+  --space-10: 58px;
+  --space-11: 74px;
+  --space-12: 96px;
+
+  --gutter: 34px;
+  --gutter-mobile: 18px;
+  --page-max: 1300px;
+  --section-gap: 96px;
+  --grid-gap: 22px;
+  --field-gap: 16px;
+}

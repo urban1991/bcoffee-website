@@ -1,0 +1,40 @@
+:root {
+  /* Base palette. Brown and turquoise come from the B. Coffee roundel (disc + ring;
+     the ring samples as rgb(11,189,250) — the token below is deliberately deeper for
+     type contrast on cream). --bc-gold is NOT in the logo: it is an added third accent,
+     documented under "Intentional additions" in readme.md and removable in one line. */
+  --bc-ink: oklch(0.26 0.045 52);
+  --bc-ink-strong: oklch(0.2 0.04 52);
+  --bc-ink-muted: oklch(0.45 0.035 52);
+  --bc-ink-faint: oklch(0.52 0.03 52);
+  --bc-espresso: oklch(0.4 0.05 52);
+
+  --bc-paper: oklch(0.972 0.018 92);
+  --bc-paper-raised: oklch(0.99 0.014 92);
+  --bc-paper-sunken: oklch(0.945 0.026 90);
+
+  --bc-turquoise: oklch(0.65 0.125 197);
+  --bc-turquoise-deep: oklch(0.5 0.11 200);
+  --bc-gold: oklch(0.83 0.13 84);
+
+  /* Semantic aliases — use these in components */
+  --text-body: var(--bc-ink);
+  --text-strong: var(--bc-ink-strong);
+  --text-muted: var(--bc-ink-muted);
+  --text-faint: var(--bc-ink-faint);
+  --text-accent: var(--bc-turquoise-deep);
+  --text-on-accent: var(--bc-ink-strong);
+  --text-on-dark: var(--bc-paper-raised);
+
+  --surface-page: var(--bc-paper);
+  --surface-card: var(--bc-paper-raised);
+  --surface-sunken: var(--bc-paper-sunken);
+  --surface-accent: var(--bc-turquoise);
+  --surface-highlight: var(--bc-gold);
+  --surface-dark: var(--bc-ink);
+  --surface-photo: var(--bc-espresso);
+
+  --line-ink: var(--bc-ink);
+  --line-soft: oklch(0.26 0.045 52 / 0.2);
+  --line-dashed: oklch(0.26 0.045 52 / 0.28);
+}

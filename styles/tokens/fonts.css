@@ -1,0 +1,13 @@
+/* B. Coffee webfonts — Bricolage Grotesque, Caveat, Archivo.
+
+   W design systemie te trzy rodziny były ładowane przez @import z CDN Google Fonts.
+   W Next.js ładuje je `next/font/google` w app/layout.tsx: self-hosting, brak
+   render-blocking @import, automatyczny fallback bez CLS. next/font wystawia
+   rodziny jako --font-display-family / --font-hand-family / --font-body-family,
+   a poniższe aliasy zachowują oryginalne nazwy tokenów. */
+:root {
+  --font-display: var(--font-display-family), system-ui, sans-serif;
+  --font-hand: var(--font-hand-family), cursive;
+  --font-body: var(--font-body-family), system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}

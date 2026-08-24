@@ -1,0 +1,11 @@
+:root {
+  /* Hard offset shadows, no blur, no spread — a printed-sticker look. */
+  --shadow-sm: 3px 3px 0 var(--bc-ink);
+  --shadow-md: 4px 4px 0 var(--bc-ink);
+  --shadow-lg: 5px 5px 0 var(--bc-ink);
+  --shadow-xl: 6px 6px 0 var(--bc-ink);
+  --shadow-2xl: 8px 8px 0 var(--bc-ink);
+  --shadow-photo: 6px 6px 0 oklch(0.26 0.045 52 / 0.16);
+  --shadow-focus: 3px 3px 0 var(--bc-gold);
+  --shadow-inverse: 4px 4px 0 var(--bc-paper-raised);
+}

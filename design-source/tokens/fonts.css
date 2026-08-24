@@ -1,0 +1,3 @@
+/* B. Coffee webfonts — all three are Google Fonts, loaded from Google's CDN.
+   The @font-face rules are served by the stylesheet below; no binaries are vendored. */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Caveat:wght@500;600;700&family=Archivo:wght@400;500;600&display=swap");

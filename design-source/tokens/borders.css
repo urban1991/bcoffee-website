@@ -1,0 +1,13 @@
+:root {
+  /* Every surface is outlined. 2px is the constant — never 1px, never 3px. */
+  --border-width: 2px;
+  --border: var(--border-width) solid var(--line-ink);
+  --border-dashed: var(--border-width) dashed var(--line-dashed);
+
+  --radius-pill: 999px;
+  --radius-block: 26px;
+  --radius-card: 18px;
+  --radius-input: 12px;
+  --radius-tile: 10px;
+  --radius-photo: 6px;
+}

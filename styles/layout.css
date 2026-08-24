@@ -1,0 +1,103 @@
+/* Warstwa responsywna.
+
+   Design system przełączał układ przez `isNarrow` liczone z window.innerWidth.
+   W Next.js to nie przechodzi przez SSR (pierwszy render na serwerze nie zna
+   szerokości okna), więc te same przełączenia realizują media queries. Punkt
+   podziału 900px jest ten sam co w kicie. */
+
+:root {
+  --bp-narrow: 900px;
+
+  /* Wartości, które w kicie były trójargumentowe: isNarrow ? a : b */
+  --gut: var(--gutter);
+  --pad-block: 44px;
+  --hero-pad: 50px;
+  --hero-min-h: 82vh;
+  --gap-cols: 44px;
+  --gap-about: 64px;
+  --header-gap: 36px;
+}
+
+@media (max-width: 899px) {
+  :root {
+    --gut: var(--gutter-mobile);
+    --pad-block: 26px;
+    --hero-pad: 26px;
+    --hero-min-h: 74vh;
+    --gap-cols: 30px;
+    --gap-about: 30px;
+    --header-gap: 14px;
+  }
+}
+
+/* Widoczność zależna od szerokości */
+@media (max-width: 899px) {
+  .bc-only-wide {
+    display: none !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .bc-only-narrow {
+    display: none !important;
+  }
+}
+
+/* Siatka wielokolumnowa zwijana do jednej kolumny.
+   Liczbę/proporcje kolumn podaje się inline przez --cols. */
+.bc-grid {
+  display: grid;
+  grid-template-columns: var(--cols, 1fr);
+  gap: var(--gap-cols);
+}
+
+@media (max-width: 899px) {
+  .bc-grid {
+    grid-template-columns: var(--cols-narrow, 1fr);
+  }
+}
+
+/* Przechył znika na wąskim ekranie — w kicie robił to tilt={isNarrow ? 0 : x} */
+@media (max-width: 899px) {
+  .bc-untilt {
+    transform: none !important;
+  }
+}
+
+/* Siatki, które w kicie miały własne progi */
+.bc-ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 899px) {
+  .bc-ig-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Wewnętrzna siatka StatBand i szerokiej OfferCard. W oryginale nie zwijały się
+   wcale — na telefonie łamały układ. */
+@media (max-width: 899px) {
+  .bc-statband-grid,
+  .bc-offercard-wide {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Focus widoczny z klawiatury. Kit polegał wyłącznie na :focus w polach formularza. */
+:focus-visible {
+  outline: 3px solid var(--bc-turquoise-deep);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

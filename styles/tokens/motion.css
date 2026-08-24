@@ -1,0 +1,17 @@
+:root {
+  --dur-fast: 0.15s;
+  --dur: 0.2s;
+  --dur-slow: 0.25s;
+  --ease: ease;
+  --ticker-duration: 30s;
+
+  /* Interaction: elements lift toward the light and the hard shadow grows. Nothing fades. */
+  --lift: translate(-2px, -2px);
+  --lift-lg: translate(-3px, -3px);
+
+  /* Nothing on this site sits perfectly straight. */
+  --tilt-left: -2deg;
+  --tilt-right: 1.6deg;
+  --tilt-card: -1.2deg;
+  --tilt-sticker: -9deg;
+}

@@ -1,0 +1,39 @@
+:root {
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-hand: "Caveat", cursive;
+  --font-body: "Archivo", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Fluid display sizes — the site is designed to breathe, headings scale with the viewport */
+  --text-hero: clamp(52px, 8.6vw, 132px);
+  --text-h1: clamp(50px, 6.8vw, 108px);
+  --text-h2: clamp(42px, 5.4vw, 82px);
+  --text-h3: clamp(30px, 3.6vw, 52px);
+  --text-h4: 26px;
+  --text-lead: 19px;
+  --text-base: 16px;
+  --text-sm: 15px;
+  --text-xs: 14px;
+  --text-label: 11px;
+  --text-caption: 11px;
+
+  /* Handwritten accents run larger than the type they sit next to */
+  --text-hand-lg: 38px;
+  --text-hand: 27px;
+  --text-hand-sm: 22px;
+
+  --weight-display: 800;
+  --weight-strong: 700;
+  --weight-medium: 500;
+  --weight-body: 400;
+
+  --track-display: -0.045em;
+  --track-tight: -0.03em;
+  --track-label: 0.08em;
+  --track-eyebrow: 0.14em;
+
+  --leading-display: 0.88;
+  --leading-heading: 0.96;
+  --leading-body: 1.6;
+  --leading-lead: 1.55;
+}

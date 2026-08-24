@@ -54,6 +54,43 @@ Zmiany dotyczą wyłącznie rzeczy, które w Next.js musiały wyglądać inaczej
   pokazuje od razu wartość końcową.
 - **Focus.** Dodany widoczny `:focus-visible` — kit obsługiwał tylko pola formularza.
 
+## Publikacja na GitHub Pages
+
+Strona jest eksportowana statycznie (`output: "export"`) i wdrażana przez
+GitHub Actions — [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+Każdy push na `master` przebudowuje i publikuje.
+
+Docelowy adres: **https://urban1991.github.io/bcoffee-website/**
+
+### Jednorazowa konfiguracja
+
+W repozytorium na GitHubie: **Settings → Pages → Build and deployment → Source**
+ustaw na **GitHub Actions**. Bez tego workflow zbuduje stronę, ale deploy się nie uda.
+
+### Jak działa basePath
+
+Pages serwuje projekt z podkatalogu `/bcoffee-website/`, więc build produkcyjny
+potrzebuje `basePath`. Workflow wylicza go z nazwy repozytorium i podaje jako
+`NEXT_PUBLIC_BASE_PATH`; `next.config.ts` czyta tę zmienną. Lokalnie zmiennej nie
+ma, więc `npm run dev` działa pod gołym `/`. Jeśli kiedyś przeniesiesz projekt do
+repo `urban1991.github.io` albo podepniesz własną domenę, workflow sam ustawi
+pusty basePath — nie trzeba nic zmieniać w kodzie.
+
+Żeby zbudować lokalnie dokładnie to, co pójdzie na Pages:
+
+```bash
+NEXT_PUBLIC_BASE_PATH=/bcoffee-website npm run build
+```
+
+Wynik ląduje w `out/`. Podgląd wymaga serwowania spod prefiksu — sam `out/index.html`
+otwarty z dysku nie znajdzie zasobów.
+
+### Ograniczenia statycznego hostingu
+
+Pages nie uruchamia Node, więc **formularz kontaktowy nie zadziała przez Server
+Action** — wymaga zewnętrznego endpointu (np. Formspree, Web3Forms) albo `mailto:`.
+Z tego samego powodu `next/image` ma wyłączoną optymalizację.
+
 ## Do uzupełnienia
 
 Rzeczy, które projekt zostawił świadomie otwarte:
@@ -66,7 +103,8 @@ Rzeczy, które projekt zostawił świadomie otwarte:
   (pełnoekranowe zdjęcie, obecnie aktywne) albo `"split"` (50/50 z polaroidem).
   Oba są zaimplementowane; po wyborze można usunąć drugi.
 - **Formularz nie ma backendu.** Submit przełącza stan lokalny, tak jak w kicie.
-  Do zrobienia: Server Action albo endpoint mailowy + walidacja + antyspam.
+  Na GitHub Pages Server Action nie wchodzi w grę — potrzebny zewnętrzny endpoint
+  (Formspree / Web3Forms) albo przeniesienie hostingu na Vercel.
 - **Opisy pakietu weselnego** w `WeddingScreen.tsx` to propozycja z projektu,
   nie treść z bcoffee.pl — do potwierdzenia (jest o tym notka na stronie).
 - **Podstrony `/kawa-na-event`, `/webpage_19`, `/webpage_21`** linkują wciąż na

@@ -11,6 +11,7 @@ const display = Bricolage_Grotesque({
   display: "swap",
 });
 
+
 const hand = Caveat({
   subsets: ["latin", "latin-ext"],
   variable: "--font-hand-family",

@@ -2,12 +2,13 @@
 
    Design system przełączał układ przez `isNarrow` liczone z window.innerWidth.
    W Next.js to nie przechodzi przez SSR (pierwszy render na serwerze nie zna
-   szerokości okna), więc te same przełączenia realizują media queries. Punkt
-   podziału 900px jest ten sam co w kicie. */
+   szerokości okna), więc te same przełączenia realizują media queries.
+
+   Progi są dwa. 900px — zwijanie siatek do jednej kolumny, tak jak w kicie.
+   600px — marginesy i oddechy; kit miał tu też 900px, ale margines telefonowy
+   na tablecie dosuwał treść do krawędzi. */
 
 :root {
-  --bp-narrow: 900px;
-
   /* Wartości, które w kicie były trójargumentowe: isNarrow ? a : b */
   --gut: var(--gutter);
   --pad-block: 44px;
@@ -18,16 +19,34 @@
   --header-gap: 36px;
 }
 
+/* Poniżej 900px siatki zwijają się do jednej kolumny — tak chciał kit. */
 @media (max-width: 899px) {
+  :root {
+    --hero-min-h: 74vh;
+    --gap-cols: 30px;
+    --gap-about: 30px;
+  }
+}
+
+/* Marginesy i oddechy schodzą dopiero poniżej 600px. Kit miał jeden próg 900px,
+   ale margines telefonowy (18px) na tablecie 834px dosuwa treść do krawędzi,
+   a padding 26px w kartach wygląda na ciasny. Tablet ma miejsce — niech je ma. */
+@media (max-width: 599px) {
   :root {
     --gut: var(--gutter-mobile);
     --pad-block: 26px;
     --hero-pad: 26px;
-    --hero-min-h: 74vh;
-    --gap-cols: 30px;
-    --gap-about: 30px;
     --header-gap: 14px;
   }
+}
+
+/* Długość wiersza. W układzie dwukolumnowym szerokość kolumny sama trzymała tekst
+   w ryzach; po zwinięciu do jednej kolumny akapit rozciągał się na ~100 znaków,
+   czyli daleko poza granicę czytelności. */
+/* 60ch, nie 68: jednostka `ch` to szerokość zera, wyraźnie szerszego niż średnia
+   litera w Archivo — 68ch wychodziło w praktyce na 78 znaków w wierszu. */
+.bc-prose {
+  max-width: 60ch;
 }
 
 /* Widoczność zależna od szerokości */
@@ -84,6 +103,38 @@
   .bc-offercard-wide {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* Linki tekstowe w nawigacji i stopce.
+
+   Design system: „Header links and pills swap fill to gold instead of moving.
+   No fades, no scale, no bounce." Więc zamiast podkreślenia czy przesunięcia —
+   złote wypełnienie jak zakreślaczem.
+
+   Dwa warianty, bo różnią się tym, czy mają już własny padding:
+   `.bc-link`   — linki stojące w tekście lub w rzędzie nawigacji,
+   `.bc-menu-item` — pozycje w panelu rozwijanym i w menu mobilnym. */
+.bc-link,
+.bc-menu-item {
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+.bc-link:hover,
+.bc-menu-item:hover {
+  background: var(--surface-highlight);
+  color: var(--text-on-accent);
+}
+
+/* Ujemny margines kompensuje padding, żeby najechanie nie przesuwało sąsiadów:
+   ruch jest zarezerwowany dla przycisków i kart. */
+.bc-link {
+  display: inline-block;
+  width: fit-content;
+  padding: 9px 12px;
+  margin: -9px -12px;
+  border-radius: var(--radius-input);
 }
 
 /* Focus widoczny z klawiatury. Kit polegał wyłącznie na :focus w polach formularza. */

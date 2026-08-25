@@ -33,6 +33,9 @@
   --surface-highlight: var(--bc-gold);
   --surface-dark: var(--bc-ink);
   --surface-photo: var(--bc-espresso);
+  --bc-error: oklch(0.48 0.16 28);
+  --text-error: var(--bc-error);
+  --line-error: var(--bc-error);
 
   --line-ink: var(--bc-ink);
   --line-soft: oklch(0.26 0.045 52 / 0.2);

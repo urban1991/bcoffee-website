@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * The dark counter block: a gold number that counts up when it scrolls into view,
@@ -19,12 +19,44 @@ export interface StatBandProps {
   style?: React.CSSProperties;
 }
 
-export function StatBand({ value = 0, caption = "", body = "", animate = true, className, style, ...rest }: StatBandProps) {
-  const [counted, setCounted] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
+/** Spacja cienka (U+2009) jako separator tysięcy — tak robi to design system. */
+function format(n: number): string {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u2009");
+}
 
-  // Bez animacji liczba jest czystą pochodną propsa — żadnego stanu do zsynchronizowania.
-  const shown = animate ? counted : value;
+/** useLayoutEffect na serwerze wypisuje ostrzeżenie; tam i tak nie ma czego mierzyć. */
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+export function StatBand({ value = 0, caption = "", body = "", animate = true, className, style, ...rest }: StatBandProps) {
+  /**
+   * `null` znaczy „jeszcze nie animujemy" i renderuje prawdziwą liczbę. Dzięki temu
+   * HTML z serwera zawiera właściwą wartość — inaczej Google i użytkownicy bez JS
+   * widzieliby „0 zaparzonych kaw", czyli nieprawdę o marce.
+   */
+  const [counted, setCounted] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const shown = counted ?? value;
+
+  /**
+   * Rozmiar liczby musi zależeć od tego, ile ma znaków. Przy stałym maksimum
+   * „50 000" mieści się w kolumnie, a „500 000" już z niej wychodzi i nachodzi
+   * na tekst obok. Liczymy znaki wartości KOŃCOWEJ, nie bieżącej — inaczej
+   * krój zmieniałby się w trakcie odliczania.
+   */
+  const finalChars = format(value).length;
+
+  // Zerujemy licznik przed pierwszym malowaniem i tylko wtedy, gdy blok jest poza
+  // ekranem — gdyby był już widoczny, użytkownik zobaczyłby mignięcie liczby i skok do zera.
+  useIsomorphicLayoutEffect(() => {
+    if (!animate) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const rect = el.getBoundingClientRect();
+    const visible = rect.top < window.innerHeight && rect.bottom > 0;
+    if (!visible) setCounted(0);
+  }, [animate]);
 
   useEffect(() => {
     if (!animate) return;
@@ -33,12 +65,6 @@ export function StatBand({ value = 0, caption = "", body = "", animate = true, c
     let raf = 0;
 
     const run = () => {
-      // prefers-reduced-motion: liczba pojawia się od razu, bez odliczania.
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        raf = requestAnimationFrame(() => setCounted(value));
-        return;
-      }
-
       const t0 = performance.now();
       const tick = (t: number) => {
         const p = Math.min(1, (t - t0) / 1600);
@@ -48,10 +74,8 @@ export function StatBand({ value = 0, caption = "", body = "", animate = true, c
       raf = requestAnimationFrame(tick);
     };
 
-    if (!el || typeof IntersectionObserver === "undefined") {
-      run();
-      return () => cancelAnimationFrame(raf);
-    }
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const io = new IntersectionObserver(
       (es) => {
@@ -84,24 +108,30 @@ export function StatBand({ value = 0, caption = "", body = "", animate = true, c
       {...rest}
     >
       <div className="bc-statband-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "48px", alignItems: "center" }}>
-        <div ref={ref}>
+        <div ref={ref} style={{ containerType: "inline-size", minWidth: 0 }}>
           <div
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: "var(--weight-display)" as React.CSSProperties["fontWeight"],
-              fontSize: "clamp(76px, 12vw, 186px)",
+              // 100cqi to pełna szerokość kolumny; 0.58em to średnia szerokość znaku
+              // w tym kroju przy tym trackingu. Cokolwiek dłuższego samo się zmniejszy,
+              // zamiast wyjść poza kolumnę.
+              fontSize: `min(clamp(76px, 12vw, 186px), calc(100cqi / (${finalChars} * 0.58)))`,
               lineHeight: 0.84,
               letterSpacing: "-0.05em",
               color: "var(--surface-highlight)",
+              // Bez tego cyfry drgają w trakcie odliczania — każda ma inną szerokość.
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
             }}
           >
-            {String(shown).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
+            {format(shown)}
           </div>
           <div style={{ fontFamily: "var(--font-hand)", fontWeight: 700, fontSize: "clamp(30px, 3.6vw, 54px)", marginTop: "6px", color: "oklch(0.75 0.11 197)" }}>
             {caption}
           </div>
         </div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "17px", lineHeight: "var(--leading-body)", margin: 0, opacity: 0.9 }}>{body}</p>
+        <p className="bc-prose" style={{ fontFamily: "var(--font-body)", fontSize: "17px", lineHeight: "var(--leading-body)", margin: 0, opacity: 0.9 }}>{body}</p>
       </div>
     </div>
   );

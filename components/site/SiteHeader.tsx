@@ -2,21 +2,43 @@
 
 import * as React from "react";
 import { useState } from "react";
+import Image from "next/image";
 import { AppLink } from "../core/AppLink";
 import { Button } from "../core/Button";
-import { site, routes } from "@/lib/site-config";
+import { OfferMenu } from "./OfferMenu";
+import { routes } from "@/lib/routes";
+import type { NavOfferPage, SiteSettings } from "@/sanity/types";
 
-const link: React.CSSProperties = { fontSize: 14, fontWeight: 500 };
+/* 16px zamiast 14px: przy 14 linki ginęły obok wordmarku i dawały ciasny cel
+   dotykowy. Razem z paddingiem z .bc-link pastylka ma ~38px wysokości. */
+const link: React.CSSProperties = { fontSize: 16, fontWeight: 500 };
 
+/* Padding poziomy daje oddech złotemu wypełnieniu, ujemny margines cofa go tak,
+   żeby tekst pozostał wyrównany do krawędzi menu. */
 const mobileItem: React.CSSProperties = {
   fontFamily: "var(--font-display)",
   fontWeight: 700,
   fontSize: 24,
   letterSpacing: "var(--track-tight)",
-  padding: "9px 0",
+  padding: "9px 12px",
+  margin: "0 -12px",
+  borderRadius: "var(--radius-input)",
 };
 
-export function SiteHeader() {
+const mobileSubItem: React.CSSProperties = {
+  ...mobileItem,
+  fontWeight: 600,
+  fontSize: 18,
+  color: "var(--text-muted)",
+  padding: "7px 12px 7px 30px",
+};
+
+interface Props {
+  settings: SiteSettings;
+  offerPages: NavOfferPage[];
+}
+
+export function SiteHeader({ settings, offerPages }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const close = () => setMenuOpen(false);
 
@@ -38,11 +60,12 @@ export function SiteHeader() {
           padding: "14px var(--gut)",
           display: "flex",
           alignItems: "center",
-          gap: "var(--header-gap, 36px)",
+          gap: "var(--header-gap)",
         }}
       >
         <AppLink
           href={routes.home}
+          aria-label={settings.siteName}
           style={{
             fontFamily: "var(--font-display)",
             fontWeight: 800,
@@ -52,37 +75,39 @@ export function SiteHeader() {
             flex: "none",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 12,
           }}
         >
-          {site.wordmark}
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--surface-accent)", border: "var(--border)" }} />
+          {/* Roundel niesie markę, wordmark czytelność: design system odradzał sam
+              roundel w nagłówku, bo jego pismo jest nieczytelne w tej skali. */}
+          <Image
+            src={settings.logo?.url ?? "/logo-bcoffee.webp"}
+            alt=""
+            width={46}
+            height={46}
+            priority
+            unoptimized={settings.logo?.mimeType === "image/svg+xml"}
+            style={{ width: 46, height: 46, flex: "none", borderRadius: "50%" }}
+          />
+          <span>{settings.wordmark}</span>
         </AppLink>
 
-        <nav className="bc-only-wide" style={{ display: "flex", gap: 26, marginLeft: "auto" }}>
-          <AppLink href="/#oferta" style={link}>
-            Oferta
-          </AppLink>
-          <AppLink href={routes.wedding} style={link}>
-            Wesele
-          </AppLink>
-          <AppLink href="/#o-nas" style={link}>
+        <nav className="bc-only-wide" style={{ display: "flex", alignItems: "center", gap: 26, marginLeft: "auto" }}>
+          <OfferMenu pages={offerPages} linkStyle={link} />
+          <AppLink href="/#o-nas" className="bc-link" style={link}>
             O nas
           </AppLink>
-          <AppLink href="/#kontakt" style={link}>
+          <AppLink href="/#kontakt" className="bc-link" style={link}>
             Kontakt
           </AppLink>
-          <AppLink href={site.shop} style={link}>
-            Sklep
-          </AppLink>
+          {settings.shopUrl ? (
+            <AppLink href={settings.shopUrl} className="bc-link" style={link}>
+              Sklep
+            </AppLink>
+          ) : null}
         </nav>
 
-        <Button
-          className="bc-only-wide"
-          href="/#kontakt"
-          size="sm"
-          style={{ fontSize: 15, padding: "11px 22px", boxShadow: "var(--shadow-sm)" }}
-        >
+        <Button className="bc-only-wide" href="/#kontakt" size="sm" style={{ fontSize: 15, padding: "11px 22px", boxShadow: "var(--shadow-sm)" }}>
           Szybka wycena
         </Button>
 
@@ -121,23 +146,31 @@ export function SiteHeader() {
           className="bc-only-narrow"
           style={{ borderTop: "var(--border)", padding: "14px var(--gut) 22px", display: "flex", flexDirection: "column", gap: 2 }}
         >
-          <AppLink href="/#oferta" onClick={close} style={mobileItem}>
+          {/* Na telefonie oferta jest rozwinięta od razu — chowanie jej za drugim
+              kliknięciem tylko wydłuża drogę do podstron. */}
+          <AppLink href="/#oferta" onClick={close} className="bc-menu-item" style={mobileItem}>
             Oferta
           </AppLink>
-          <AppLink href={routes.wedding} onClick={close} style={mobileItem}>
-            Kawa na wesele
-          </AppLink>
-          <AppLink href="/#o-nas" onClick={close} style={mobileItem}>
+          {offerPages.map((page) => (
+            <AppLink key={page.slug} href={`/${page.slug}`} onClick={close} className="bc-menu-item" style={mobileSubItem}>
+              {page.title}
+            </AppLink>
+          ))}
+
+          <AppLink href="/#o-nas" onClick={close} className="bc-menu-item" style={mobileItem}>
             O nas
           </AppLink>
-          <AppLink href="/#kontakt" onClick={close} style={mobileItem}>
+          <AppLink href="/#kontakt" onClick={close} className="bc-menu-item" style={mobileItem}>
             Kontakt
           </AppLink>
-          <AppLink href={site.shop} onClick={close} style={mobileItem}>
-            Sklep
-          </AppLink>
-          <Button href={site.phoneHref} fullWidth style={{ marginTop: 10 }}>
-            {site.phone}
+          {settings.shopUrl ? (
+            <AppLink href={settings.shopUrl} onClick={close} className="bc-menu-item" style={mobileItem}>
+              Sklep
+            </AppLink>
+          ) : null}
+
+          <Button href={settings.phoneHref} fullWidth style={{ marginTop: 10 }}>
+            {settings.phone}
           </Button>
         </div>
       ) : null}

@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useState } from "react";
 import { AppLink } from "../core/AppLink";
-import { PhotoSlot } from "../media/PhotoSlot";
+import { CmsPhoto } from "../media/CmsPhoto";
+import type { Photo } from "@/sanity/types";
 
 /**
  * A service tile: photo on top, title and an arrow below, tilted at rest and
@@ -13,8 +14,8 @@ import { PhotoSlot } from "../media/PhotoSlot";
 export interface OfferCardProps {
   title?: string;
   href: string;
-  /** PhotoSlot caption: "foto — bar na weselu". */
-  photoLabel?: string;
+  /** Zdjęcie z CMS-a; bez wgranego pliku pokazuje placeholder. */
+  photo?: Photo | null;
   /** Degrees at rest; alternate the sign across a row. Ignored when `wide`. */
   tilt?: number;
   /** Full-width gold card with eyebrow, body copy and a dark pill CTA. */
@@ -31,7 +32,7 @@ export interface OfferCardProps {
 export function OfferCard({
   title,
   href,
-  photoLabel = "foto",
+  photo,
   tilt = -1.2,
   wide = false,
   eyebrow,
@@ -108,14 +109,13 @@ export function OfferCard({
             {ctaLabel}
           </span>
         </div>
-        <PhotoSlot
-          label={photoLabel}
+        <CmsPhoto
+          photo={photo}
+          sizes="(max-width: 899px) 100vw, 45vw"
           style={{
             aspectRatio: "auto",
             minHeight: 280,
             borderLeft: "var(--border)",
-            background: "transparent",
-            backgroundImage: "repeating-linear-gradient(135deg, oklch(0.26 0.045 52 / 0.1) 0 10px, transparent 10px 22px)",
           }}
         />
       </AppLink>
@@ -140,7 +140,7 @@ export function OfferCard({
       {...handlers}
       {...rest}
     >
-      <PhotoSlot label={photoLabel} ratio="4 / 3" style={{ borderBottom: "var(--border)" }} />
+      <CmsPhoto photo={photo} ratio="4 / 3" sizes="(max-width: 899px) 100vw, 33vw" style={{ borderBottom: "var(--border)" }} />
       <div style={{ padding: "20px 24px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-h4)", letterSpacing: "var(--track-tight)" }}>{title}</span>
         <span style={{ fontSize: "22px", color: "var(--text-accent)" }}>→</span>

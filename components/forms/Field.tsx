@@ -8,11 +8,19 @@ export interface FieldProps {
   children?: React.ReactNode;
   /** 'full' makes the field span both columns of a two-column form grid. */
   span?: 1 | "full";
+  /**
+   * Komunikat walidacji. Design system nie przewidywał stanu błędu, bo kit nie
+   * miał walidacji — dołożone tu, żeby dało się wskazać konkretne pole zamiast
+   * jednego komunikatu pod przyciskiem.
+   */
+  error?: string;
+  /** Id komunikatu błędu — do podpięcia przez aria-describedby w kontrolce. */
+  errorId?: string;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function Field({ label, htmlFor, children, span = 1, className, style, ...rest }: FieldProps) {
+export function Field({ label, htmlFor, children, span = 1, error, errorId, className, style, ...rest }: FieldProps) {
   return (
     <div className={className} style={{ gridColumn: span === "full" ? "1 / -1" : undefined, ...style }} {...rest}>
       {label ? (
@@ -25,7 +33,7 @@ export function Field({ label, htmlFor, children, span = 1, className, style, ..
             fontWeight: 600,
             letterSpacing: "var(--track-label)",
             textTransform: "uppercase",
-            color: "var(--text-muted)",
+            color: error ? "var(--text-error)" : "var(--text-muted)",
             marginBottom: "6px",
           }}
         >
@@ -33,6 +41,21 @@ export function Field({ label, htmlFor, children, span = 1, className, style, ..
         </label>
       ) : null}
       {children}
+      {error ? (
+        <p
+          id={errorId}
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "var(--text-xs)",
+            fontWeight: 500,
+            lineHeight: 1.35,
+            color: "var(--text-error)",
+            margin: "6px 0 0",
+          }}
+        >
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

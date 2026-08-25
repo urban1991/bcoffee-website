@@ -1,6 +1,7 @@
 import * as React from "react";
 import { AppLink } from "../core/AppLink";
-import { site, routes } from "@/lib/site-config";
+import { routes } from "@/lib/routes";
+import type { NavOfferPage, SiteSettings } from "@/sanity/types";
 
 const colTitle: React.CSSProperties = {
   fontFamily: "var(--font-hand)",
@@ -12,7 +13,20 @@ const colTitle: React.CSSProperties = {
 
 const item: React.CSSProperties = { color: "var(--text-muted)", fontSize: 14 };
 
-export function SiteFooter() {
+export function SiteFooter({ settings, offerPages }: { settings: SiteSettings; offerPages: NavOfferPage[] }) {
+  const shortcuts = [
+    { label: "Strona główna", href: routes.home },
+    ...offerPages.map((p) => ({ label: p.title, href: `/${p.slug}` })),
+    ...(settings.shopUrl ? [{ label: "Sklep", href: settings.shopUrl }] : []),
+  ];
+
+  const social = [
+    settings.facebookUrl && { label: "Facebook", href: settings.facebookUrl },
+    settings.instagramUrl && { label: "Instagram", href: settings.instagramUrl },
+    settings.termsUrl && { label: "Regulamin", href: settings.termsUrl },
+    settings.privacyUrl && { label: "Polityka prywatności", href: settings.privacyUrl },
+  ].filter((x): x is { label: string; href: string } => Boolean(x));
+
   return (
     <footer style={{ borderTop: "var(--border)" }}>
       <div
@@ -31,7 +45,7 @@ export function SiteFooter() {
               gap: 8,
             }}
           >
-            {site.wordmark}
+            {settings.wordmark}
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--surface-accent)", border: "var(--border)" }} />
           </div>
           <p style={{ fontSize: 15, lineHeight: "var(--leading-body)", color: "var(--text-muted)", margin: "16px 0 0", maxWidth: "30ch" }}>
@@ -43,47 +57,33 @@ export function SiteFooter() {
         <div>
           <div style={colTitle}>skróty</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <AppLink href={routes.home} style={item}>
-              Strona główna
-            </AppLink>
-            <AppLink href="/#oferta" style={item}>
-              Oferta
-            </AppLink>
-            <AppLink href={routes.wedding} style={item}>
-              Kawa na wesele
-            </AppLink>
-            <AppLink href={site.shop} style={item}>
-              Sklep
-            </AppLink>
+            {shortcuts.map((s) => (
+              <AppLink key={s.href} href={s.href} className="bc-link" style={item}>
+                {s.label}
+              </AppLink>
+            ))}
           </div>
         </div>
 
         <div>
           <div style={colTitle}>dane firmy</div>
           <address style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, color: "var(--text-muted)", fontStyle: "normal" }}>
-            <span>{site.company.legalName}</span>
-            <span>{site.company.street}</span>
-            <span>{site.company.city}</span>
-            <span>NIP {site.company.nip}</span>
-            <span>REGON {site.company.regon}</span>
+            <span>{settings.legalName}</span>
+            {settings.street ? <span>{settings.street}</span> : null}
+            {settings.city ? <span>{settings.city}</span> : null}
+            {settings.nip ? <span>NIP {settings.nip}</span> : null}
+            {settings.regon ? <span>REGON {settings.regon}</span> : null}
           </address>
         </div>
 
         <div>
           <div style={colTitle}>social media</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <AppLink href={site.facebook} style={item}>
-              Facebook
-            </AppLink>
-            <AppLink href={site.instagram} style={item}>
-              Instagram
-            </AppLink>
-            <AppLink href={site.legal.terms} style={item}>
-              Regulamin
-            </AppLink>
-            <AppLink href={site.legal.privacy} style={item}>
-              Polityka prywatności
-            </AppLink>
+            {social.map((s) => (
+              <AppLink key={s.href} href={s.href} className="bc-link" style={item}>
+                {s.label}
+              </AppLink>
+            ))}
           </div>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function SiteFooter() {
           color: "var(--text-faint)",
         }}
       >
-        © {new Date().getFullYear()} {site.company.legalName}
+        © {new Date().getFullYear()} {settings.legalName}
       </div>
     </footer>
   );

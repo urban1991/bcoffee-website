@@ -1,111 +1,157 @@
 # bcoffee-website
 
-Implementacja redesignu bcoffee.pl w Next.js, zbudowana na design systemie
-„B. Coffee" wyeksportowanym z Claude Design.
+Redesign bcoffee.pl w Next.js, zbudowany na design systemie „B. Coffee"
+wyeksportowanym z Claude Design. Treść siedzi w Sanity, hosting na Vercelu.
 
 ```bash
+npm install
+cp .env.example .env.local   # uzupełnij wartości — patrz „Uruchomienie od zera”
 npm run dev
 ```
 
-## Skąd wziął się design
+| Adres | Co |
+| --- | --- |
+| `/` | Strona główna |
+| `/kawa-na-event` | Podstrona ofertowa |
+| `/barista-na-targi` | Podstrona ofertowa |
+| `/bar-z-lemoniada` | Podstrona ofertowa |
+| `/kawa-na-wesele` | Podstrona ofertowa |
+| `/studio` | Panel treści (Sanity Studio) |
 
-Źródłem jest projekt Claude Design `bb394e20-a820-4b79-a119-2f8c3f50ac69`.
-Cały jego kontent (89 plików) leży w [`design-source/`](design-source) jako
-materiał referencyjny — tokeny, komponenty `.jsx`, karty guidelines, ui kit
-i trzy warianty canvas (`B Coffee.dc.html` v1 ciemna, `v2` jasna, `v3` — wersja
-kanoniczna, z której system został wyekstrahowany).
+Podstrony ofertowe obsługuje jedna trasa `app/(site)/[slug]/`. Nowa podstrona to
+wyłącznie nowy dokument w Studio — bez zmian w kodzie.
 
-`design-source/` **nie jest kodem aplikacji** — jest wyłączone z ESLinta i nie
-trafia do bundla. Służy do porównania przy zmianach w designie.
+## Uruchomienie od zera
+
+Kolejność ma znaczenie — bez treści w Sanity build nie przejdzie, bo strony
+pobierają dane w czasie budowania.
+
+**1. Projekt w Sanity.** Załóż konto na [sanity.io](https://sanity.io), utwórz
+projekt z datasetem `production`. Z `sanity.io/manage → API` przepisz `Project ID`
+do `.env.local`. Tam samo utwórz token z uprawnieniem **Editor** i wpisz go jako
+`SANITY_WRITE_TOKEN` (potrzebny tylko lokalnie, do zasilenia treścią).
+
+**2. Zasil treścią.**
+
+```bash
+npm run seed
+```
+
+Wgrywa teksty, które wcześniej były wpisane w kodzie: stronę główną, cztery
+podstrony ofertowe, sekcję kontaktową, ustawienia i cztery kafle usług. Zdjęć nie
+wgrywa — każdy slot dostaje opis, co ma tam wejść.
+
+Skrypt jest bezpieczny do ponownego uruchomienia: dokumenty, które już istnieją,
+zostają nietknięte, więc wgrane zdjęcia i poprawki z Studio przetrwają.
+`npm run seed -- --force` przywraca treść domyślną — to kasuje wszystkie
+podpięte zdjęcia na nadpisywanych dokumentach, więc używaj świadomie.
+
+**3. Zdjęcia.** Wejdź na `/studio` i wgraj pliki w miejsca opisane placeholderami.
+Dopóki plik nie jest wgrany, front rysuje kreskowany `PhotoSlot` — strona wygląda
+sensownie na każdym etapie uzupełniania.
+
+**4. Formularz.** Załóż konto na [resend.com](https://resend.com), zweryfikuj
+domenę `bcoffee.pl`, utwórz klucz API. Uzupełnij `RESEND_API_KEY` i
+`INQUIRY_FROM_EMAIL`. Adres odbiorcy ustawia się w Studio → Ustawienia strony.
+
+**5. Vercel.** Podłącz repozytorium, przepisz wszystkie zmienne z `.env.local`
+**poza** `SANITY_WRITE_TOKEN` — strona publiczna czyta dane bez tokenu.
+
+**6. Webhook rewalidacji.** `sanity.io/manage → API → Webhooks`, nowy webhook:
+
+| Pole | Wartość |
+| --- | --- |
+| URL | `https://<domena>/api/revalidate` |
+| Dataset | `production` |
+| Trigger | Create, Update, Delete |
+| Secret | ta sama wartość co `SANITY_REVALIDATE_SECRET` |
+
+Bez tego zmiany w Studio nie pojawią się na stronie do następnego deployu.
+
+## Walidacja formularza
+
+Jedna schema zoda ([lib/inquiry-schema.ts](lib/inquiry-schema.ts)) obsługuje obie
+strony: React Hook Form waliduje nią w przeglądarce, a Server Action tą samą przy
+odbiorze. Reguły nie mogą się rozjechać, a atrybuty HTML przestają być jedynym
+zabezpieczeniem — Server Action to publiczny endpoint, do którego można wysłać
+dowolne dane z pominięciem formularza.
+
+Obowiązkowy jest wyłącznie e-mail. Telefon jest opcjonalny, ale gdy podany —
+sprawdzany. Wszystkie pola mają limity długości, liczba gości musi być dodatnią
+liczbą całkowitą, a data wydarzenia nie może być z przeszłości.
+
+Zamiast `@hookform/resolvers` jest własny [zod-resolver.ts](lib/zod-resolver.ts):
+ten pakiet ciągnie opcjonalny łańcuch `@typeschema/*` wymagający zoda 3, a Sanity 6
+przypina zoda 4 — instalacja kończy się konfliktem peer dependencies.
+
+## Jak to działa
+
+Strony są prerenderowane i trzymane w cache'u Next.js bez wygasania
+(`revalidate: false` + tag `sanity-content`). Publikacja w Studio uderza w
+webhook, ten unieważnia tag i strona przebudowuje się z nową treścią. Efekt:
+szybkość strony statycznej i natychmiastowe zmiany bez odpytywania CMS-a przy
+każdym wejściu.
 
 ## Struktura
 
 | Ścieżka | Co |
 | --- | --- |
-| `app/layout.tsx` | Fonty (`next/font`), metadata, header + footer |
-| `app/page.tsx` | Strona główna |
-| `app/kawa-na-wesele/page.tsx` | Podstrona weselna |
-| `styles/tokens/` | Tokeny 1:1 z design systemu — kolory, typografia, spacing, borders, shadows, motion, texture, base |
-| `styles/layout.css` | Warstwa responsywna (patrz niżej) |
-| `components/core/` | `Button`, `Card`, `Pill`, `Sticker`, `AppLink` |
-| `components/forms/` | `Field`, `Input`, `Select`, `Textarea` |
-| `components/media/` | `PhotoSlot`, `Polaroid`, `Ticker` |
-| `components/content/` | `SectionHeading`, `OfferCard`, `StatBand` |
-| `components/site/` | Ekrany: header, home, wesele, kontakt, footer |
-| `lib/site-config.ts` | Dane firmowe, telefon, licznik, wariant hero |
+| `app/layout.tsx` | Tylko `<html>`, `<body>` i fonty |
+| `app/(site)/` | Strony publiczne + header i stopka |
+| `app/(site)/[slug]/` | Podstrony ofertowe — jedna trasa na wszystkie |
+| `app/studio/` | Sanity Studio, poza layoutem strony |
+| `app/api/revalidate/` | Webhook czyszczący cache po publikacji |
+| `app/actions/send-inquiry.ts` | Server Action formularza (Resend) |
+| `sanity/schemas/` | Schema treści |
+| `sanity/queries.ts` | Zapytania GROQ |
+| `sanity/types.ts` | Typy odpowiedzi, pisane ręcznie |
+| `styles/tokens/` | Tokeny 1:1 z design systemu |
+| `styles/layout.css` | Warstwa responsywna |
+| `components/core\|forms\|media\|content/` | Komponenty design systemu |
+| `components/site/` | Ekrany |
+| `scripts/seed.ts` | Jednorazowe zasilenie treścią |
+| `scripts/offer-pages.ts` | Treść podstron, przepisana z bcoffee.pl |
+| `scripts/migrate.ts` | Migracja istniejącego datasetu na `offerPage` |
+| `design-source/` | Eksport z Claude Design — materiał referencyjny, nie kod aplikacji |
+
+## Skąd wziął się design
+
+Źródłem jest projekt Claude Design `bb394e20-a820-4b79-a119-2f8c3f50ac69`.
+Cały jego kontent (89 plików) leży w [`design-source/`](design-source): tokeny,
+komponenty `.jsx`, karty guidelines, ui kit i trzy warianty canvas — `v3` jest
+wersją kanoniczną, z której system został wyekstrahowany. Katalog jest wyłączony
+z ESLinta i nie trafia do bundla; służy do porównania przy zmianach w designie.
 
 ## Czym port różni się od kitu
 
 Komponenty przeniesione są 1:1 — te same inline style oparte na CSS variables,
-te same nazwy propsów, typy przepisane z dostarczonych plików `.d.ts`.
-Zmiany dotyczą wyłącznie rzeczy, które w Next.js musiały wyglądać inaczej:
+te same nazwy propsów, typy przepisane z dostarczonych plików `.d.ts`. Zmiany
+dotyczą rzeczy, które w Next.js musiały wyglądać inaczej:
 
-- **Responsywność.** Kit liczył `isNarrow` z `window.innerWidth` i przekazywał
-  przez propsy. Przy SSR pierwszy render nie zna szerokości okna, więc te same
-  przełączenia robią media queries w `styles/layout.css` (próg 900px, ten sam
-  co w kicie). Zwijanie kolumn steruje się przez `.bc-grid` + `--cols`.
-- **Routing.** Kit przełączał widoki stanem (`page === 'home' | 'wesele'`).
-  Tutaj są prawdziwe trasy, a linki wewnętrzne idą przez `next/link` (`AppLink`).
-- **Fonty.** `@import` z CDN Google Fonts zastąpił `next/font/google` —
-  self-hosting, brak render-blockingu, fallback bez CLS.
-- **Poprawki responsywne, których kit nie miał.** Siatka wewnątrz `StatBand`
-  i szerokiej `OfferCard` nie zwijała się wcale i łamała układ na telefonie.
-- **`prefers-reduced-motion`.** Ticker i licznik zatrzymują się, licznik
-  pokazuje od razu wartość końcową.
-- **Focus.** Dodany widoczny `:focus-visible` — kit obsługiwał tylko pola formularza.
-
-## Publikacja na GitHub Pages
-
-Strona jest eksportowana statycznie (`output: "export"`) i wdrażana przez
-GitHub Actions — [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
-Każdy push na `master` przebudowuje i publikuje.
-
-Docelowy adres: **https://urban1991.github.io/bcoffee-website/**
-
-### Jednorazowa konfiguracja
-
-W repozytorium na GitHubie: **Settings → Pages → Build and deployment → Source**
-ustaw na **GitHub Actions**. Bez tego workflow zbuduje stronę, ale deploy się nie uda.
-
-### Jak działa basePath
-
-Pages serwuje projekt z podkatalogu `/bcoffee-website/`, więc build produkcyjny
-potrzebuje `basePath`. Workflow wylicza go z nazwy repozytorium i podaje jako
-`NEXT_PUBLIC_BASE_PATH`; `next.config.ts` czyta tę zmienną. Lokalnie zmiennej nie
-ma, więc `npm run dev` działa pod gołym `/`. Jeśli kiedyś przeniesiesz projekt do
-repo `urban1991.github.io` albo podepniesz własną domenę, workflow sam ustawi
-pusty basePath — nie trzeba nic zmieniać w kodzie.
-
-Żeby zbudować lokalnie dokładnie to, co pójdzie na Pages:
-
-```bash
-NEXT_PUBLIC_BASE_PATH=/bcoffee-website npm run build
-```
-
-Wynik ląduje w `out/`. Podgląd wymaga serwowania spod prefiksu — sam `out/index.html`
-otwarty z dysku nie znajdzie zasobów.
-
-### Ograniczenia statycznego hostingu
-
-Pages nie uruchamia Node, więc **formularz kontaktowy nie zadziała przez Server
-Action** — wymaga zewnętrznego endpointu (np. Formspree, Web3Forms) albo `mailto:`.
-Z tego samego powodu `next/image` ma wyłączoną optymalizację.
+- **Responsywność.** Kit liczył `isNarrow` z `window.innerWidth`. Przy SSR
+  pierwszy render nie zna szerokości okna, więc te same przełączenia robią media
+  queries w `styles/layout.css` (próg 900px, ten sam co w kicie).
+- **Routing.** Kit przełączał widoki stanem. Tutaj są prawdziwe trasy, a linki
+  wewnętrzne idą przez `next/link` (`AppLink`).
+- **Fonty.** `@import` z CDN zastąpił `next/font/google` — self-hosting, brak
+  render-blockingu, fallback bez CLS.
+- **Zdjęcia.** `PhotoSlot` z kitu żyje dalej jako stan „brak pliku”; gdy zdjęcie
+  jest wgrane, `CmsPhoto` renderuje zoptymalizowany `next/image`.
+- **Poprawki responsywne, których kit nie miał.** Siatka w `StatBand` i szerokiej
+  `OfferCard` nie zwijała się wcale i łamała układ na telefonie.
+- **`prefers-reduced-motion`.** Ticker i licznik zatrzymują się, licznik pokazuje
+  od razu wartość końcową.
+- **Focus.** Dodany widoczny `:focus-visible`.
 
 ## Do uzupełnienia
 
-Rzeczy, które projekt zostawił świadomie otwarte:
-
-- **Zdjęcia.** Każdy obraz to `PhotoSlot` / `Polaroid` z opisem, co ma tam wejść.
-  Podmiana: przekaż `<Image>` jako `children` do `Polaroid`.
-- **Licznik kaw.** `brewedCoffees` w `lib/site-config.ts` to wartość zastępcza
-  50 000. Wstaw prawdziwą liczbę przed publikacją.
-- **Wariant hero.** `heroVariant` w `lib/site-config.ts` — `"foto"`
-  (pełnoekranowe zdjęcie, obecnie aktywne) albo `"split"` (50/50 z polaroidem).
-  Oba są zaimplementowane; po wyborze można usunąć drugi.
-- **Formularz nie ma backendu.** Submit przełącza stan lokalny, tak jak w kicie.
-  Na GitHub Pages Server Action nie wchodzi w grę — potrzebny zewnętrzny endpoint
-  (Formspree / Web3Forms) albo przeniesienie hostingu na Vercel.
-- **Opisy pakietu weselnego** w `WeddingScreen.tsx` to propozycja z projektu,
-  nie treść z bcoffee.pl — do potwierdzenia (jest o tym notka na stronie).
-- **Podstrony `/kawa-na-event`, `/webpage_19`, `/webpage_21`** linkują wciąż na
-  stary serwis (`lib/site-config.ts` → `externalOffers`).
+- **Licznik kaw** — `npm run seed` wstawia zastępcze 50 000. Wpisz prawdziwą
+  liczbę w Studio → Strona główna → Licznik.
+- **Opisy pakietu weselnego** to propozycja z projektu, nie treść z bcoffee.pl.
+  Na stronie jest o tym notka — po potwierdzeniu zakresu wyczyść pole
+  „Notka pod kartami”, a zniknie.
+- **Zdjęcia na podstronach ofertowych.** Treść przepisano dosłownie z bcoffee.pl,
+  ale zdjęć stamtąd nie da się pobrać (leniwe ładowanie za przezroczystymi
+  podkładkami). Każdy slot ma opis, co powinno tam wejść.
+- **Wariant hero** — Studio → Strona główna → Hero. Do wyboru pełnoekranowe
+  zdjęcie albo split 50/50.

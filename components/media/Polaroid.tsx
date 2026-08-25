@@ -1,25 +1,39 @@
 import * as React from "react";
-import { PhotoSlot } from "./PhotoSlot";
+import { CmsPhoto } from "./CmsPhoto";
+import type { Photo } from "@/sanity/types";
 
 /**
  * A photo taped down slightly crooked: white frame, thick bottom lip, soft ink shadow.
  * The signature way this brand presents any image.
  */
 export interface PolaroidProps {
-  /** Caption for the inner PhotoSlot. Ignored when children are supplied. */
-  label?: string;
+  /** Zdjęcie z CMS-a. Bez wgranego pliku ramka pokazuje placeholder z opisem. */
+  photo?: Photo | null;
   ratio?: string;
   /** Degrees. ±2 is the house range. */
   tilt?: number;
   /** Fixed frame height — the inner slot then flexes to fill it. */
   minHeight?: number | string;
-  /** A real <img> / next/image once photography exists. */
+  sizes?: string;
+  priority?: boolean;
+  /** Własna zawartość zamiast zdjęcia. */
   children?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function Polaroid({ label = "zdjęcie", ratio = "4 / 5", tilt = -2, minHeight, children, className, style, ...rest }: PolaroidProps) {
+export function Polaroid({
+  photo,
+  ratio = "4 / 5",
+  tilt = -2,
+  minHeight,
+  sizes = "(max-width: 899px) 100vw, 50vw",
+  priority = false,
+  children,
+  className,
+  style,
+  ...rest
+}: PolaroidProps) {
   return (
     <div
       className={className}
@@ -37,7 +51,12 @@ export function Polaroid({ label = "zdjęcie", ratio = "4 / 5", tilt = -2, minHe
       }}
       {...rest}
     >
-      {children || (minHeight ? <PhotoSlot label={label} fill /> : <PhotoSlot label={label} ratio={ratio} />)}
+      {children ??
+        (minHeight ? (
+          <CmsPhoto photo={photo} fill sizes={sizes} priority={priority} />
+        ) : (
+          <CmsPhoto photo={photo} ratio={ratio} sizes={sizes} priority={priority} />
+        ))}
     </div>
   );
 }

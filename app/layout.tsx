@@ -21,7 +21,7 @@ const body = Archivo({
 /**
  * Layout korzenia trzyma tylko <html>/<body> i fonty. Style strony i chrome
  * (header, stopka) siedzą w app/(site)/layout.tsx, żeby Studio pod /studio
- * dostało czystą kartę.
+ * dostało czystą karte.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

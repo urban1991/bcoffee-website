@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { OfferPageScreen } from "@/components/site/OfferPageScreen";
 import { ContactSection } from "@/components/site/ContactSection";
 import { requireDoc, sanityFetch } from "@/sanity/lib/fetch";
+import { pageMetadata } from "@/lib/seo";
 import { contactSectionQuery, offerPageQuery, offerPageSlugsQuery, siteSettingsQuery } from "@/sanity/queries";
 import type { ContactSection as ContactSectionData, OfferPage, SiteSettings } from "@/sanity/types";
 
@@ -14,13 +15,22 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+
+  // Ustawienia dopiero po sprawdzeniu, czy podstrona w ogóle istnieje — tak samo jak
+  // niżej w komponencie. Inaczej nieznany adres kosztowałby dwa zapytania na metadane
+  // i trzecie na render, mimo że i tak kończy się na 404.
   const page = await sanityFetch<OfferPage | null>({ query: offerPageQuery, params: { slug } });
   if (!page) return {};
 
-  return {
+  const settings = await sanityFetch<SiteSettings | null>({ query: siteSettingsQuery });
+
+  return pageMetadata({
     title: page.metaTitle ?? page.title,
-    description: page.metaDescription ?? undefined,
-  };
+    description: page.metaDescription,
+    path: `/${slug}`,
+    photo: page.heroPhoto,
+    siteName: requireDoc(settings, "siteSettings").siteName,
+  });
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {

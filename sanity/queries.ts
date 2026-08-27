@@ -7,6 +7,7 @@ import { defineQuery } from "next-sanity";
 const photoFields = /* groq */ `
   placeholder,
   alt,
+  "hotspot": asset.hotspot,
   "url": asset.asset->url,
   "mimeType": asset.asset->mimeType,
   "lqip": asset.asset->metadata.lqip,
@@ -54,6 +55,24 @@ export const homePageQuery = defineQuery(`{
 /** Lekka lista do nawigacji — tylko to, co potrzebne na rozwijane menu. */
 export const navOfferPagesQuery = defineQuery(`*[_type == "offerPage" && defined(slug.current)] | order(order asc){
   title, "slug": slug.current
+}`);
+
+/**
+ * Do mapy strony: adres + data ostatniej zmiany.
+ *
+ * `home` zbiera daty dokumentów, z których strona główna jest złożona — jej własnej
+ * treści i kafli oferty (`offer`, nie `offerPage` — to dwa różne typy). Bez tego edycja
+ * hero czy licznika kaw nie ruszałaby `lastmod` dla `/`.
+ *
+ * Ustawień i sekcji kontaktowej celowo tu nie ma: to belka, stopka i formularz obecne
+ * na każdej stronie. Google prosi, żeby `lastmod` znaczyło istotną zmianę treści,
+ * a nie poprawkę numeru telefonu w stopce.
+ */
+export const sitemapQuery = defineQuery(`{
+  "home": *[_type in ["homePage", "offer"]]._updatedAt,
+  "pages": *[_type == "offerPage" && defined(slug.current)] | order(order asc){
+    "slug": slug.current, _updatedAt
+  }
 }`);
 
 export const offerPageSlugsQuery = defineQuery(`*[_type == "offerPage" && defined(slug.current)].slug.current`);

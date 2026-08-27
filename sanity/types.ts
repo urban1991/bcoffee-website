@@ -4,9 +4,16 @@
  * (`sanity typegen`) byłby tu narzutem. Przy rozroście schemy warto go dołożyć.
  */
 
+/** Punkt ostrości ustawiany w Studio, w ułamkach szerokości/wysokości (0–1). */
+export interface Hotspot {
+  x: number;
+  y: number;
+}
+
 export interface Photo {
   placeholder: string;
   alt?: string | null;
+  hotspot?: Hotspot | null;
   url?: string | null;
   mimeType?: string | null;
   lqip?: string | null;
@@ -95,6 +102,17 @@ export interface HomePage {
 export interface HomePageData {
   page: HomePage;
   offers: Offer[];
+}
+
+export interface SitemapEntry {
+  slug: string;
+  _updatedAt: string;
+}
+
+export interface SitemapData {
+  /** Daty dokumentów składających się na stronę główną. */
+  home: string[];
+  pages: SitemapEntry[];
 }
 
 export interface NavOfferPage {

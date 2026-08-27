@@ -84,13 +84,40 @@ Zamiast `@hookform/resolvers` jest własny [zod-resolver.ts](lib/zod-resolver.ts
 ten pakiet ciągnie opcjonalny łańcuch `@typeschema/*` wymagający zoda 3, a Sanity 6
 przypina zoda 4 — instalacja kończy się konfliktem peer dependencies.
 
+## Widoczność w wyszukiwarkach
+
+Domyślnie strona jest **zamknięta dla robotów**: `robots.txt` zwraca `Disallow: /`,
+a każda podstrona dostaje `noindex, nofollow`. Chodzi o to, żeby wersja robocza pod
+adresem `.vercel.app` nie trafiła do Google — inaczej po premierze dwie kopie tej
+samej treści konkurują ze sobą pod różnymi adresami, a w wynikach zostaje wersja
+z placeholderami.
+
+**W dniu premiery**: ustaw `ALLOW_INDEXING=true` w zmiennych środowiskowych na
+Vercelu i przedeployuj. Wtedy `robots.txt` przepuszcza wszystko poza `/studio`,
+wskazuje mapę strony, a `noindex` znika. Mapa strony jest pod tą samą blokadą —
+dopóki indeksowanie jest wyłączone, `/sitemap.xml` jest pusta, żeby spis adresów
+wersji roboczej nie wisiał pod znanym adresem.
+
+Sterowanie znajduje się w [lib/indexing.ts](lib/indexing.ts); czytają je
+[app/robots.ts](app/robots.ts) i `generateMetadata` w `app/(site)/layout.tsx`.
+
 ## Jak to działa
 
-Strony są prerenderowane i trzymane w cache'u Next.js bez wygasania
-(`revalidate: false` + tag `sanity-content`). Publikacja w Studio uderza w
-webhook, ten unieważnia tag i strona przebudowuje się z nową treścią. Efekt:
-szybkość strony statycznej i natychmiastowe zmiany bez odpytywania CMS-a przy
-każdym wejściu.
+Strony są prerenderowane i trzymane w cache'u Next.js pod tagiem `sanity-content`.
+Publikacja w Studio uderza w webhook, ten unieważnia tag i strona przebudowuje się
+z nową treścią. Efekt: szybkość strony statycznej i natychmiastowe zmiany bez
+odpytywania CMS-a przy każdym wejściu.
+
+Dwie rzeczy pilnują, żeby zmiana faktycznie dojechała:
+
+- **`useCdn: false`** w [kliencie Sanity](sanity/lib/client.ts). Cache'e są dwa,
+  a webhook unieważnia tylko cache Next.js. Gdyby po rewalidacji dane szły przez
+  CDN Sanity, można było trafić na jeszcze nieodświeżoną wersję i zapisać ją u
+  siebie — w Studio zmiana jest, na stronie pojawia się z opóźnieniem.
+- **`revalidate: 3600`** w [sanityFetch](sanity/lib/fetch.ts) jako siatka
+  bezpieczeństwa. Odświeżaniem steruje webhook; godzina jest tylko na wypadek,
+  gdyby kiedyś przestał działać, żeby strona nie została ze starą treścią
+  do następnego deployu.
 
 ## Struktura
 

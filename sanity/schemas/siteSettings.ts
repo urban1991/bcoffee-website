@@ -58,8 +58,6 @@ export const siteSettings = defineType({
     defineField({ name: "instagramUrl", title: "Instagram", type: "url", group: "links" }),
     defineField({ name: "instagramHandle", title: "Nazwa na Instagramie", type: "string", group: "links" }),
     defineField({ name: "facebookUrl", title: "Facebook", type: "url", group: "links" }),
-    defineField({ name: "termsUrl", title: "Regulamin", type: "url", group: "links" }),
-    defineField({ name: "privacyUrl", title: "Polityka prywatności", type: "url", group: "links" }),
   ],
   preview: { prepare: () => ({ title: "Ustawienia strony" }) },
 });

@@ -9,6 +9,9 @@
  *   2. Zakłada trzy pozostałe podstrony z treścią przepisaną z bcoffee.pl.
  *   3. Przestawia kafle usług na stronie głównej ze starego serwisu na własne podstrony.
  *   4. Kasuje `weddingPage`, który nie ma już odpowiednika w schemie.
+ *   5. Usuwa z ustawień `termsUrl` i `privacyUrl` — regulamin i polityka są teraz
+ *      stronami serwisu, a ich adresy stoją w lib/routes.ts. Bez tego Studio pokazuje
+ *      obie wartości jako pola spoza schemy, czyli jako błąd do wyjaśnienia.
  *
  * Bezpieczne do ponownego uruchomienia: istniejących podstron nie nadpisuje.
  */
@@ -72,12 +75,19 @@ async function main() {
   const presentIds = await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: wantedIds });
   const missingIds = wantedIds.filter((id) => !presentIds.includes(id));
 
+  // To samo zastrzeżenie co przy kaflach: patch na nieistniejącym dokumencie przerywa
+  // całą transakcję, więc najpierw sprawdzamy, czy ustawienia w ogóle są.
+  const settingsId = await client.fetch<string | null>(`*[_type == "siteSettings"][0]._id`);
+
   const tx = client.transaction();
   for (const doc of docs) {
     tx.createIfNotExists(doc as never);
   }
   for (const id of presentIds) {
     tx.patch(id, (p) => p.set({ href: offerHrefs[id] }));
+  }
+  if (settingsId) {
+    tx.patch(settingsId, (p) => p.unset(["termsUrl", "privacyUrl"]));
   }
   await tx.commit();
 
@@ -88,6 +98,7 @@ async function main() {
   );
   console.log(`Podstrony ofertowe: ${docs.length}`);
   console.log(`Kafle usług przestawione na wewnętrzne adresy: ${presentIds.length}`);
+  console.log(settingsId ? "Ustawienia: usunięto termsUrl i privacyUrl." : "Nie znaleziono dokumentu ustawień — pominięto sprzątanie linków prawnych.");
   if (missingIds.length) {
     console.warn(`Pominięto ${missingIds.length} kafli, których nie ma w datasecie: ${missingIds.join(", ")}.`);
     console.warn("Jeśli istnieją pod innym id, popraw ich adres ręcznie w Studio → Kafle usług.");

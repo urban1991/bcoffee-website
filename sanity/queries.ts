@@ -8,6 +8,7 @@ const photoFields = /* groq */ `
   placeholder,
   alt,
   "hotspot": asset.hotspot,
+  "crop": asset.crop,
   "url": asset.asset->url,
   "mimeType": asset.asset->mimeType,
   "lqip": asset.asset->metadata.lqip,
@@ -22,7 +23,7 @@ export const siteSettingsQuery = defineQuery(`*[_type == "siteSettings"][0]{
   wordmark, siteName, metaTitle, metaDescription,
   phone, phoneHref, inquiryEmail,
   legalName, street, city, nip, regon,
-  shopUrl, instagramUrl, instagramHandle, facebookUrl, termsUrl, privacyUrl
+  shopUrl, instagramUrl, instagramHandle, facebookUrl
 }`);
 
 export const homePageQuery = defineQuery(`{

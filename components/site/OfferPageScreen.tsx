@@ -227,7 +227,11 @@ export function OfferPageScreen({ page }: { page: OfferPage }) {
         <section style={{ ...section, paddingTop: 84 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 22 }}>
             {page.galleryPhotos.map((photo, i) => (
-              <Polaroid key={i} className="bc-untilt" photo={photo} ratio="3 / 4" tilt={[-2, 1.8, -1.2][i % 3]} sizes="(max-width: 899px) 100vw, 33vw" />
+              // Ramka idzie za zdjęciem, zamiast narzucać mu proporcje. Wcześniej było tu
+              // sztywne 3/4 — pionowa ramka na poziomych zdjęciach wycinała blisko połowę
+              // szerokości i powiększała resztę, stąd wrażenie kadru „za blisko". Sztywna
+              // wartość i tak byłaby zgadywaniem: co jest w galerii, decyduje CMS.
+              <Polaroid key={i} className="bc-untilt" photo={photo} ratio="auto" tilt={[-2, 1.8, -1.2][i % 3]} sizes="(max-width: 899px) 100vw, 33vw" />
             ))}
           </div>
         </section>

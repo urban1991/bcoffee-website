@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "./site-url";
+import { cdnImage, imageSource } from "./sanity-image";
 import type { Photo, SiteSettings } from "@/sanity/types";
 
 /** Format zalecany przez Facebooka i LinkedIn dla dużego kafelka. */
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
-/** Dokłada parametry przekształcenia do adresu z CDN-u Sanity. */
-function cdnImage(rawUrl: string, params: Record<string, string>): string {
-  const url = new URL(rawUrl);
-  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-  return url.toString();
-}
+/** Nazwa firmy, gdy dokument ustawień jest niedostępny. Ten sam wzorzec co logo niżej. */
+export const FALLBACK_SITE_NAME = "B. Coffee";
 
 /**
  * Zdjęcie do podglądu linku. Bierzemy hero danej strony i każemy CDN-owi Sanity
@@ -21,7 +18,10 @@ function cdnImage(rawUrl: string, params: Record<string, string>): string {
 export function ogImage(photo: Photo | null | undefined, alt: string) {
   if (!photo?.url) return undefined;
 
-  const url = cdnImage(photo.url, {
+  // Najpierw przycięcie ustawione w Studio, dopiero na nim kadr pod podgląd linku.
+  const { url: base, focal } = imageSource(photo);
+
+  const url = cdnImage(base, {
     w: String(OG_WIDTH),
     h: String(OG_HEIGHT),
     fit: "crop",
@@ -32,10 +32,8 @@ export function ogImage(photo: Photo | null | undefined, alt: string) {
     q: "80",
     // Kadr 1,91:1 obcina zdjęciu 4:3 jakieś 40% wysokości. Bez punktu ostrości CDN
     // tnie od środka i ucina głowy — dlatego oddajemy decyzję temu, kto ustawił
-    // hotspot w Studio. Gdy go nie ma, zostaje kadrowanie od środka.
-    ...(photo.hotspot
-      ? { crop: "focalpoint", "fp-x": String(photo.hotspot.x), "fp-y": String(photo.hotspot.y) }
-      : {}),
+    // celownik w Studio. Gdy go nie ma, zostaje kadrowanie od środka.
+    ...(focal ? { crop: "focalpoint", "fp-x": String(focal.x), "fp-y": String(focal.y) } : {}),
   });
 
   return { url, width: OG_WIDTH, height: OG_HEIGHT, alt: photo.alt || alt };

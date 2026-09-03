@@ -47,8 +47,6 @@ const siteSettings = {
   instagramUrl: "https://www.instagram.com/bcoffeebehappy/",
   instagramHandle: "@bcoffeebehappy",
   facebookUrl: "https://www.facebook.com/bcoffeebehappy",
-  termsUrl: "https://bcoffee.pl/regulamin-strony",
-  privacyUrl: "https://bcoffee.pl/polityka-prywatnosci",
 };
 
 const homePage = {

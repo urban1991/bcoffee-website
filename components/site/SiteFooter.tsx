@@ -20,12 +20,21 @@ export function SiteFooter({ settings, offerPages }: { settings: SiteSettings; o
     ...(settings.shopUrl ? [{ label: "Sklep", href: settings.shopUrl }] : []),
   ];
 
+  // Tylko profile społecznościowe — każdy opcjonalny, stąd filtr.
   const social = [
     settings.facebookUrl && { label: "Facebook", href: settings.facebookUrl },
     settings.instagramUrl && { label: "Instagram", href: settings.instagramUrl },
-    settings.termsUrl && { label: "Regulamin", href: settings.termsUrl },
-    settings.privacyUrl && { label: "Polityka prywatności", href: settings.privacyUrl },
   ].filter((x): x is { label: string; href: string } => Boolean(x));
+
+  // Regulamin i polityka są teraz stronami tego serwisu, więc ich adresy biorą się
+  // z `routes`, a nie z Sanity: wcześniej stały tam pełne adresy starej strony, przez
+  // co AppLink otwierał własny regulamin w nowej karcie jak link zewnętrzny.
+  // Miejsce też inne — wisiały w kolumnie „social media", gdzie dokument prawny nie jest
+  // ani social, ani media. Belka na dole to zwyczajowe miejsce na takie odnośniki.
+  const legal = [
+    { label: "Regulamin", href: routes.terms },
+    { label: "Polityka prywatności", href: routes.privacy },
+  ];
 
   return (
     <footer style={{ borderTop: "var(--border)" }}>
@@ -96,9 +105,23 @@ export function SiteFooter({ settings, offerPages }: { settings: SiteSettings; o
           borderTop: "2px solid var(--line-soft)",
           fontSize: 12,
           color: "var(--text-faint)",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
         }}
       >
-        © {new Date().getFullYear()} {settings.legalName}
+        <span>
+          © {new Date().getFullYear()} {settings.legalName}
+        </span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 18 }}>
+          {legal.map((l) => (
+            <AppLink key={l.href} href={l.href} className="bc-link" style={{ color: "var(--text-faint)", fontSize: 12 }}>
+              {l.label}
+            </AppLink>
+          ))}
+        </div>
       </div>
     </footer>
   );

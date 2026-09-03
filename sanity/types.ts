@@ -10,10 +10,23 @@ export interface Hotspot {
   y: number;
 }
 
+/**
+ * Prostokąt przycięcia ze Studio — ile odciąć z każdej krawędzi, w ułamkach (0–1).
+ * To druga, niezależna kontrolka w edytorze zdjęć obok punktu ostrości; obie trzeba
+ * czytać, bo edytor pokazuje je równorzędnie.
+ */
+export interface Crop {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
 export interface Photo {
   placeholder: string;
   alt?: string | null;
   hotspot?: Hotspot | null;
+  crop?: Crop | null;
   url?: string | null;
   mimeType?: string | null;
   lqip?: string | null;
@@ -44,8 +57,6 @@ export interface SiteSettings {
   instagramUrl?: string | null;
   instagramHandle?: string | null;
   facebookUrl?: string | null;
-  termsUrl?: string | null;
-  privacyUrl?: string | null;
 }
 
 export interface Offer {
